@@ -3,6 +3,7 @@ package io.github.dragonitefll.petball;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -40,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.Manifest.permission.READ_CONTACTS;
+import static android.provider.AlarmClock.EXTRA_MESSAGE;
 
 /**
  * A login screen that offers login via email/password.
@@ -190,14 +192,24 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                             .addOnCompleteListener(activity, new OnCompleteListener<AuthResult>() {
                                                 @Override
                                                 public void onComplete(@NonNull Task<AuthResult> task) {
-
+                                                    if (task.isSuccessful()) {
+                                                        changeActivities();
+                                                    }
                                                 }
                                             });
                                 }
+                            } else {
+                                        changeActivities();
                             }
                         }
                     });
         }
+    }
+    public void changeActivities(){
+        Intent intent = new Intent(this, MainActivity.class);
+        String message = "Logged in/registered successfully";
+        intent.putExtra(EXTRA_MESSAGE, message);
+        startActivity(intent);
     }
 
     private FirebaseAuth mAuth;
