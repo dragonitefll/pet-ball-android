@@ -36,6 +36,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
+import com.google.firebase.auth.GetTokenResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -206,10 +207,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
     public void changeActivities(){
-        Intent intent = new Intent(this, MainActivity.class);
-        String message = "Logged in/registered successfully";
-        intent.putExtra(EXTRA_MESSAGE, message);
-        startActivity(intent);
+        final LoginActivity activity = this;
+        FirebaseAuth.getInstance().getCurrentUser().getToken(true).addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+            @Override
+            public void onComplete(@NonNull Task<GetTokenResult> task) {
+                Intent intent = new Intent(activity, MainActivity.class);
+                String token = task.getResult().getToken();
+                intent.putExtra("io.github.dragonitefll.AuthToken", token);
+                startActivity(intent);
+            }
+        });
     }
 
     private FirebaseAuth mAuth;
