@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
         URI uri = null;
         try {
-            uri = new URI("ws://192.168.1.12:3000");
+            uri = new URI("ws://petball.ward.li:3000");
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
