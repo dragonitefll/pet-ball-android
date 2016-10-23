@@ -60,6 +60,22 @@ public class VideoChatActivity extends AppCompatActivity {
         stream.addTrack(localVideoTrack);
         stream.addTrack(localAudioTrack);
 
+        GLSurfaceView videoView = new GLSurfaceView(this);
+        ViewGroup contentView = (ViewGroup)findViewById(android.R.id.content);
+        contentView.addView(videoView);
+        videoView.setX(0);
+        videoView.setY(0);
+        videoView.setMinimumWidth(contentView.getWidth());
+        videoView.setMinimumHeight(contentView.getHeight());
+        videoView.setBackgroundColor(0x000000);
+
+        VideoRendererGui.setView(videoView, null);
+        try {
+            renderer = VideoRendererGui.createGui(0, 0, 100, 100, VideoRendererGui.ScalingType.SCALE_ASPECT_FIT, false);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         peerConnection = factory.createPeerConnection(Collections.<PeerConnection.IceServer>emptyList(), constraints, new PeerConnection.Observer() {
             @Override
             public void onSignalingChange(PeerConnection.SignalingState signalingState) {
@@ -122,6 +138,7 @@ public class VideoChatActivity extends AppCompatActivity {
         });
 
         peerConnection.addStream(stream);
+
         peerConnection.setRemoteDescription(new SdpObserver() {
             @Override
             public void onCreateSuccess(SessionDescription sessionDescription) {
@@ -193,22 +210,6 @@ public class VideoChatActivity extends AppCompatActivity {
 
             }
         }, new SessionDescription(SessionDescription.Type.OFFER, getIntent().getStringExtra("io.github.dragonitefll.sdp")));
-
-        GLSurfaceView videoView = new GLSurfaceView(this);
-        ViewGroup contentView = (ViewGroup)findViewById(android.R.id.content);
-        contentView.addView(videoView);
-        videoView.setX(0);
-        videoView.setY(0);
-        videoView.setMinimumWidth(contentView.getWidth());
-        videoView.setMinimumHeight(contentView.getHeight());
-        videoView.setBackgroundColor(0x000000);
-
-        VideoRendererGui.setView(videoView, null);
-        try {
-            renderer = VideoRendererGui.createGui(0, 0, 100, 100, VideoRendererGui.ScalingType.SCALE_ASPECT_FIT, false);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public void addIceCandidate(JSONObject candidate) {
@@ -217,10 +218,5 @@ public class VideoChatActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-    }
-
-    protected void onStart() {
-        super.onStart();
-        localVideoTrack.addRenderer(renderer);
     }
 }
