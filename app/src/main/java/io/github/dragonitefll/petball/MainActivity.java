@@ -55,6 +55,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public static void moveForwardPower(int power, UsbSerialDevice serial){
-
+        serial.open();
+        serial.setBaudRate(9600);
+        serial.setDataBits(UsbSerialInterface.DATA_BITS_8);
+        serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
+        serial.setParity(UsbSerialInterface.PARITY_NONE);
+        serial.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
+        serial.write(("moveForwardPower " + power).getBytes());
     }
 }
