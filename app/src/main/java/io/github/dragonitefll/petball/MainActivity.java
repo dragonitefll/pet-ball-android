@@ -41,20 +41,20 @@ public class MainActivity extends AppCompatActivity {
                 UsbDeviceConnection connection = mUsbManager.openDevice(device);
                 UsbSerialDevice serial = UsbSerialDevice.createUsbSerialDevice(device, connection);
 
-                moveForwardPower(127,serial);
+                moveForwardPower(127,serial, 1000);
             } catch(Exception e) {
                 Toast.makeText(MainActivity.this, "Oops", Toast.LENGTH_SHORT);
             }
         }
     }
 
-    public static void moveForwardPower(int power, UsbSerialDevice serial){
+    public static void moveForwardPower(int power, UsbSerialDevice serial, int msecs){
         serial.open();
         serial.setBaudRate(9600);
         serial.setDataBits(UsbSerialInterface.DATA_BITS_8);
         serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
         serial.setParity(UsbSerialInterface.PARITY_NONE);
         serial.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
-        serial.write(("moveForwardPower " + power + "\n").getBytes());
+        serial.write(("moveForwardPower " + power + "\n" + msecs).getBytes());
     }
 }
