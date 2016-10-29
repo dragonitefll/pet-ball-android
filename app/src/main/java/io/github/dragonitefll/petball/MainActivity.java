@@ -9,6 +9,8 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.felhr.usbserial.UsbSerialDevice;
@@ -29,7 +31,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public class MainActivity extends AppCompatActivity {
-    private UsbManager mUsbManager;
     private static WebSocketClient webSocketClient = null;
     private String token;
 
@@ -37,9 +38,12 @@ public class MainActivity extends AppCompatActivity {
         return webSocketClient;
     }
 
+    public boolean isMoving = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
         token = this.getIntent().getStringExtra("io.github.dragonitefll.AuthToken");
 
@@ -99,35 +103,35 @@ public class MainActivity extends AppCompatActivity {
 
         webSocketClient.connect();
 
-        Log.e("MainActivity", token);
+        ArduinoConnection.usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
-        mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
-
-        setContentView(R.layout.activity_main);
-        UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
-        HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
-        Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
-
-        if (deviceIterator.hasNext()) {
-            try {
-                UsbDevice device = deviceIterator.next();
-                // Your code here!}
-
-
-                UsbDeviceConnection connection = mUsbManager.openDevice(device);
-                UsbSerialDevice serial = UsbSerialDevice.createUsbSerialDevice(device, connection);
-
-                serial.open();
-                serial.setBaudRate(9600);
-                serial.setDataBits(UsbSerialInterface.DATA_BITS_8);
-                serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
-                serial.setParity(UsbSerialInterface.PARITY_NONE);
-                serial.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
-                serial.write("test\n".getBytes());
-            } catch(Exception e) {
-                Toast.makeText(MainActivity.this, "Oops", Toast.LENGTH_SHORT);
+        Button button = (Button) findViewById(R.id.button2);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.e("MainActivity", "running demo");
+                        try {
+                            ArduinoConnection connection = ArduinoConnection.getInstance();
+                            Thread.sleep(1000);
+                            connection.setMotorSpeeds(255, 255);
+                            Thread.sleep(1000);
+                            connection.setMotorSpeeds(-255, -255);
+                            Thread.sleep(1000);
+                            connection.stopMotors(3);
+                            Thread.sleep(1000);
+                            connection.setMotorSpeed(0, 255);
+                            Thread.sleep(2000);
+                            connection.stopMotors(1);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
             }
-        }
+        });
     }
 
     private void switchToVideoChat(JSONObject sdp) {
