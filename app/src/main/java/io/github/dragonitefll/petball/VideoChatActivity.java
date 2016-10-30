@@ -4,6 +4,7 @@ import android.opengl.GLSurfaceView;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -218,5 +219,25 @@ public class VideoChatActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    public void driveMotors(int a, int b) {
+        ArduinoConnection connection = ArduinoConnection.getInstance();
+        Log.e("VideoChatActivity", "hi");
+        if (a == 0 & b == 0) {
+            connection.stopMotors(3);
+        } else {
+            connection.setMotorSpeeds(a, b);
+        }
+    }
+
+    public void onResume() {
+        super.onResume();
+        MainActivity.getWebSocketClient().videoChatActivity = this;
+    }
+
+    public void onPause() {
+        super.onPause();
+        MainActivity.getWebSocketClient().videoChatActivity = null;
     }
 }
