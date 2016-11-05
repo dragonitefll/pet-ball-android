@@ -60,6 +60,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mProgressView;
     private View mLoginFormView;
 
+    private boolean finishedLogin = false;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        finishedLogin = false;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,6 +101,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mProgressView = findViewById(R.id.login_progress);
 
         mAuth = FirebaseAuth.getInstance();
+
+        mAuth.addAuthStateListener(new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                if (!finishedLogin && firebaseAuth.getCurrentUser() != null) {
+                    finishedLogin = true;
+                    changeActivities();
+                }
+            }
+        });
     }
 
     private void populateAutoComplete() {
@@ -193,14 +212,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                             .addOnCompleteListener(activity, new OnCompleteListener<AuthResult>() {
                                                 @Override
                                                 public void onComplete(@NonNull Task<AuthResult> task) {
-                                                    if (task.isSuccessful()) {
-                                                        changeActivities();
-                                                    }
+
                                                 }
                                             });
                                 }
-                            } else {
-                                        changeActivities();
                             }
                         }
                     });
