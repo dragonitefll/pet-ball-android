@@ -94,6 +94,21 @@ public class ArduinoConnection {
         sendInts(toSend);
     }
 
+    public void turnLaserOn() {
+        int[] toSend = {2, 0, 0, 0};
+        sendInts(toSend);
+    }
+
+    public void turnLaserOff() {
+        int[] toSend = {3, 0, 0, 0};
+        sendInts(toSend);
+    }
+
+    public void moveLaser(int pos) {
+        int[] toSend = {4, pos, 0, 0};
+        sendInts(toSend);
+    }
+
     public void sendInts(int[] intArray) {
         byte[] bytes = new byte[intArray.length];
         for (int i = 0; i < intArray.length; i++) {
