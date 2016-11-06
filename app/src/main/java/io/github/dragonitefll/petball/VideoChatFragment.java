@@ -40,8 +40,7 @@ import java.util.ListIterator;
 
 public class VideoChatFragment extends Fragment {
 
-    VideoRenderer.Callbacks renderer = null;
-    VideoRenderer videoRenderer = null;
+    VideoRenderer renderer = null;
 
     GLSurfaceView videoView = null;
 
@@ -52,6 +51,9 @@ public class VideoChatFragment extends Fragment {
     MediaStream stream;
 
     String authToken;
+
+    private int motorSpeedA = 0;
+    private int motorSpeedB = 0;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -115,9 +117,9 @@ public class VideoChatFragment extends Fragment {
             @Override
             public void onAddStream(MediaStream mediaStream) {
                 try {
-                    videoRenderer = new VideoRenderer(renderer);
-                    mediaStream.videoTracks.getFirst().addRenderer(videoRenderer);
-                } catch (NullPointerException e) {
+                    renderer = VideoRendererGui.createGui(0, 0, 100, 100, VideoRendererGui.ScalingType.SCALE_ASPECT_FILL, false);
+                    mediaStream.videoTracks.getFirst().addRenderer(renderer);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -150,6 +152,14 @@ public class VideoChatFragment extends Fragment {
                             if (json.has("motors")) {
                                 JSONObject motors = json.getJSONObject("motors");
                                 driveMotors(motors.getInt("a"), motors.getInt("b"));
+                            } else if (json.has("laser")) {
+                                if (json.getBoolean("laser")) {
+                                    Log.i("VideoChatFragment", "Laser on");
+                                    ArduinoConnection.getInstance().turnLaserOn();
+                                } else {
+                                    Log.i("VideoChatFragment", "Laser off");
+                                    ArduinoConnection.getInstance().turnLaserOff();
+                                }
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -177,7 +187,6 @@ public class VideoChatFragment extends Fragment {
 
         try {
             VideoRendererGui.setView(videoView, null);
-            renderer = VideoRendererGui.create(0, 0, videoView.getWidth(), videoView.getHeight(), VideoRendererGui.ScalingType.SCALE_ASPECT_FILL, false);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -278,12 +287,13 @@ public class VideoChatFragment extends Fragment {
     }
 
     public void driveMotors(int a, int b) {
-        ArduinoConnection connection = ArduinoConnection.getInstance();
-        Log.e("VideoChatActivity", "hi");
-        if (a == 0 & b == 0) {
-            connection.stopMotors(3);
-        } else {
-            connection.setMotorSpeeds(a, b);
+        if (motorSpeedA != a || motorSpeedB != b) {
+            ArduinoConnection connection = ArduinoConnection.getInstance();
+            if (a == 0 & b == 0) {
+                connection.stopMotors(3);
+            } else {
+                connection.setMotorSpeeds(a, b);
+            }
         }
     }
 }
