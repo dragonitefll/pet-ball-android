@@ -31,6 +31,7 @@ import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 import org.webrtc.videoengine.VideoCaptureAndroid;
 
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -128,7 +129,33 @@ public class VideoChatFragment extends Fragment {
 
             @Override
             public void onDataChannel(DataChannel dataChannel) {
+                dataChannel.registerObserver(new DataChannel.Observer() {
+                    @Override
+                    public void onBufferedAmountChange(long l) {
 
+                    }
+
+                    @Override
+                    public void onStateChange() {
+
+                    }
+
+                    @Override
+                    public void onMessage(DataChannel.Buffer buffer) {
+                        byte[] bytes = new byte[buffer.data.remaining()];
+                        buffer.data.get(bytes);
+                        String data = new String(bytes, Charset.forName("UTF-8"));
+                        try {
+                            JSONObject json = new JSONObject(data);
+                            if (json.has("motors")) {
+                                JSONObject motors = json.getJSONObject("motors");
+                                driveMotors(motors.getInt("a"), motors.getInt("b"));
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
             }
 
             @Override

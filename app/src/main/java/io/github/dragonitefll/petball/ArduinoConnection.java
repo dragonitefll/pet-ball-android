@@ -98,7 +98,6 @@ public class ArduinoConnection {
         byte[] bytes = new byte[intArray.length];
         for (int i = 0; i < intArray.length; i++) {
             bytes[i] = (byte) intArray[i];
-            Log.e("ArduinoConnection", String.valueOf(bytes[i]));
         }
         if (this.serialDevice != null) {
             this.serialDevice.write(bytes);
