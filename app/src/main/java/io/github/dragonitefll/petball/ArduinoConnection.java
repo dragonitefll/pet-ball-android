@@ -147,7 +147,7 @@ public class ArduinoConnection {
         if (deviceIterator.hasNext()) {
             try {
                 UsbDevice device = deviceIterator.next();
-                // Your code here!}
+                // Your code here!
 
 
                 UsbDeviceConnection connection = usbManager.openDevice(device);

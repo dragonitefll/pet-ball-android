@@ -19,7 +19,7 @@ public class VideoChatWebSocketClient extends WebSocketClient {
         super(serverURI);
     }
 
-    public VideoChatWebSocketObserver observer = null;
+    public Observer observer = null;
     public String token = null;
 
     @Override
@@ -47,6 +47,8 @@ public class VideoChatWebSocketClient extends WebSocketClient {
                     observer.onIceCandidate(data.getJSONObject("candidate"));
                 } else if (data.has("ended")) {
                     observer.onCallEnd();
+                } else if (data.has("url")) {
+                    observer.onReceiveUrl(data.getString("url"));
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -63,10 +65,11 @@ public class VideoChatWebSocketClient extends WebSocketClient {
     public void onError(Exception ex) {
 
     }
-}
 
-abstract class VideoChatWebSocketObserver {
-    abstract void onRemoteDescription(JSONObject sdp);
-    abstract void onIceCandidate(JSONObject candidate);
-    abstract void onCallEnd();
+    public interface Observer {
+        void onRemoteDescription(JSONObject sdp);
+        void onIceCandidate(JSONObject candidate);
+        void onCallEnd();
+        void onReceiveUrl(String url);
+    }
 }

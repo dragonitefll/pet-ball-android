@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.Button;
 
 import org.java_websocket.client.DefaultSSLWebSocketClientFactory;
@@ -29,6 +30,7 @@ public class MainActivity extends AppCompatActivity implements VideoChatFragment
     }
 
     private VideoChatFragment videoChatFragment;
+    private WebViewFragment webViewFragment;
     private boolean inVideoChat = false;
 
     @Override
@@ -38,6 +40,9 @@ public class MainActivity extends AppCompatActivity implements VideoChatFragment
 
         videoChatFragment = new VideoChatFragment();
         videoChatFragment.observer = this;
+
+        webViewFragment = new WebViewFragment();
+        showWebViewFragment();
 
         token = this.getIntent().getStringExtra("io.github.dragonitefll.AuthToken");
 
@@ -51,9 +56,8 @@ public class MainActivity extends AppCompatActivity implements VideoChatFragment
         }
 
         webSocketClient = new VideoChatWebSocketClient(uri);
-        webSocketClient.observer = new VideoChatWebSocketObserver() {
-            @Override
-            void onRemoteDescription(JSONObject sdp) {
+        webSocketClient.observer = new VideoChatWebSocketClient.Observer() {
+            public void onRemoteDescription(JSONObject sdp) {
                 final JSONObject SDP = sdp;
                 Handler mainHandler = new Handler(getApplicationContext().getMainLooper());
                 Runnable runnable = new Runnable() {
@@ -73,14 +77,20 @@ public class MainActivity extends AppCompatActivity implements VideoChatFragment
                 mainHandler.post(runnable);
             }
 
-            @Override
-            void onIceCandidate(JSONObject candidate) {
+            public void onIceCandidate(JSONObject candidate) {
                 videoChatFragment.addIceCandidate(candidate);
             }
 
-            @Override
-            void onCallEnd() {
+            public void onCallEnd() {
                 videoChatFragment.close();
+            }
+
+            public void onReceiveUrl(String url) {
+                if (url == "default") {
+                    webViewFragment.loadDefault();
+                } else {
+                    webViewFragment.loadUrl(url);
+                }
             }
         };
         webSocketClient.token = token;
@@ -146,8 +156,15 @@ public class MainActivity extends AppCompatActivity implements VideoChatFragment
 
     public void onCallEnd() {
         this.inVideoChat = false;
+        ArduinoConnection.getInstance().stopMotors(3);
+        ArduinoConnection.getInstance().turnLaserOff();
+        showWebViewFragment();
+    }
+
+    private void showWebViewFragment() {
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.remove(videoChatFragment);
+
+        transaction.replace(android.R.id.content, webViewFragment);
         transaction.commit();
     }
 }
