@@ -20,7 +20,7 @@ import java.net.URISyntaxException;
 
 import javax.net.ssl.SSLContext;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements VideoChatFragment.Observer {
     private static VideoChatWebSocketClient webSocketClient = null;
     private String token;
 
@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         videoChatFragment = new VideoChatFragment();
+        videoChatFragment.observer = this;
 
         token = this.getIntent().getStringExtra("io.github.dragonitefll.AuthToken");
 
@@ -75,6 +76,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             void onIceCandidate(JSONObject candidate) {
                 videoChatFragment.addIceCandidate(candidate);
+            }
+
+            @Override
+            void onCallEnd() {
+                videoChatFragment.close();
             }
         };
         webSocketClient.token = token;
@@ -119,5 +125,29 @@ public class MainActivity extends AppCompatActivity {
                 }).start();
             }
         });*/
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    for (int i = 0; i < ArduinoConnection.ledStripLength; i++) {
+                        ArduinoConnection.getInstance().setLED(i, 245, 245, 220);
+                        Thread.sleep(40);
+                    }
+                    ArduinoConnection.getInstance().showLEDs();
+                } catch (ArduinoConnection.NoSuchLEDException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    public void onCallEnd() {
+        this.inVideoChat = false;
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        transaction.remove(videoChatFragment);
+        transaction.commit();
     }
 }

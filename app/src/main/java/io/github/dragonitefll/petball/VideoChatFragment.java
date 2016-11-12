@@ -32,6 +32,7 @@ import org.webrtc.VideoTrack;
 import org.webrtc.videoengine.VideoCaptureAndroid;
 
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -52,30 +53,40 @@ public class VideoChatFragment extends Fragment {
 
     String authToken;
 
+    public Observer observer;
+
     private int motorSpeedA = 0;
     private int motorSpeedB = 0;
+
+    private boolean connected = false;
+
+    static PeerConnection.IceServer[] iceServers = {
+            new PeerConnection.IceServer("stun:stun.l.google.com:19302")
+    };
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        PeerConnectionFactory.initializeAndroidGlobals(getActivity().getApplicationContext(), true, true, true, null);
-        peerConnectionFactory = new PeerConnectionFactory();
+        if (peerConnectionFactory == null) {
+            PeerConnectionFactory.initializeAndroidGlobals(getActivity().getApplicationContext(), true, true, true, null);
+            peerConnectionFactory = new PeerConnectionFactory();
 
-        VideoCapturer capture = VideoCapturerAndroid.create(VideoCapturerAndroid.getNameOfFrontFacingDevice());
-        VideoSource videoSource = peerConnectionFactory.createVideoSource(capture, mediaConstraints);
-        VideoTrack localVideoTrack = peerConnectionFactory.createVideoTrack("petVideoTrack", videoSource);
+            VideoCapturer capture = VideoCapturerAndroid.create(VideoCapturerAndroid.getNameOfFrontFacingDevice());
+            VideoSource videoSource = peerConnectionFactory.createVideoSource(capture, mediaConstraints);
+            VideoTrack localVideoTrack = peerConnectionFactory.createVideoTrack("petVideoTrack", videoSource);
 
-        AudioSource audioSource = peerConnectionFactory.createAudioSource(mediaConstraints);
-        AudioTrack localAudioTrack = peerConnectionFactory.createAudioTrack("petAudioTrack", audioSource);
+            AudioSource audioSource = peerConnectionFactory.createAudioSource(mediaConstraints);
+            AudioTrack localAudioTrack = peerConnectionFactory.createAudioTrack("petAudioTrack", audioSource);
 
-        stream = peerConnectionFactory.createLocalMediaStream("petMediaStream");
-        stream.addTrack(localVideoTrack);
-        stream.addTrack(localAudioTrack);
+            stream = peerConnectionFactory.createLocalMediaStream("petMediaStream");
+            stream.addTrack(localVideoTrack);
+            stream.addTrack(localAudioTrack);
+        }
     }
 
+
     public void createPeerConnection() {
-        Log.d("VideoChatFragment", "Creating peer connection");
-        peerConnection = peerConnectionFactory.createPeerConnection(Collections.<PeerConnection.IceServer>emptyList(), mediaConstraints, new PeerConnection.Observer() {
+        peerConnection = peerConnectionFactory.createPeerConnection(Arrays.asList(iceServers), mediaConstraints, new PeerConnection.Observer() {
             @Override
             public void onSignalingChange(PeerConnection.SignalingState signalingState) {
 
@@ -83,7 +94,13 @@ public class VideoChatFragment extends Fragment {
 
             @Override
             public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
-
+                if (iceConnectionState == PeerConnection.IceConnectionState.CONNECTED) {
+                    connected = true;
+                } else if (connected && observer != null) {
+                    connected = false;
+                    peerConnection = null;
+                    observer.onCallEnd();
+                }
             }
 
             @Override
@@ -126,7 +143,7 @@ public class VideoChatFragment extends Fragment {
 
             @Override
             public void onRemoveStream(MediaStream mediaStream) {
-                // finish();
+
             }
 
             @Override
@@ -160,6 +177,8 @@ public class VideoChatFragment extends Fragment {
                                     Log.i("VideoChatFragment", "Laser off");
                                     ArduinoConnection.getInstance().turnLaserOff();
                                 }
+                            } else if (json.has("treat")) {
+                                ArduinoConnection.getInstance().dispenseTreat();
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -177,6 +196,12 @@ public class VideoChatFragment extends Fragment {
         peerConnection.addStream(stream);
     }
 
+    public void close() {
+        if (peerConnection != null) {
+            peerConnection.close();
+        }
+    }
+
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         videoView = new GLSurfaceView(this.getActivity().getApplicationContext());
         videoView.setMinimumWidth(container.getWidth());
@@ -184,6 +209,7 @@ public class VideoChatFragment extends Fragment {
         videoView.setX(0);
         videoView.setY(0);
         videoView.setBackgroundColor(0x000000);
+
 
         try {
             VideoRendererGui.setView(videoView, null);
@@ -294,6 +320,12 @@ public class VideoChatFragment extends Fragment {
             } else {
                 connection.setMotorSpeeds(a, b);
             }
+            motorSpeedA = a;
+            motorSpeedB = b;
         }
+    }
+
+    public interface Observer {
+        void onCallEnd();
     }
 }

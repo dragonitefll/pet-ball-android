@@ -20,6 +20,8 @@ import java.util.Iterator;
  */
 
 public class ArduinoConnection {
+    public static int ledStripLength = 26;
+
     public static boolean bitRead(int x, int n) {
         return ((x >> n) & 1) > 0;
     }
@@ -109,6 +111,25 @@ public class ArduinoConnection {
         sendInts(toSend);
     }
 
+    public void dispenseTreat() {
+        int[] toSend = {5, 0, 0, 0};
+        sendInts(toSend);
+    }
+
+    public void setLED(int led, int r, int g, int b) throws NoSuchLEDException {
+        if (led >= 0 && led < ledStripLength) {
+            int[] toSend = {led + 10, r, g, b};
+            sendInts(toSend);
+        } else {
+            throw new NoSuchLEDException();
+        }
+    }
+
+    public void showLEDs() {
+        int[] toSend = {36, 0, 0, 0};
+        sendInts(toSend);
+    }
+
     public void sendInts(int[] intArray) {
         byte[] bytes = new byte[intArray.length];
         for (int i = 0; i < intArray.length; i++) {
@@ -144,5 +165,9 @@ public class ArduinoConnection {
                 e.printStackTrace();
             }
         }
+    }
+
+    public class NoSuchLEDException extends Exception {
+
     }
 }

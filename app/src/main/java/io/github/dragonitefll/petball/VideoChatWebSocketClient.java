@@ -45,6 +45,8 @@ public class VideoChatWebSocketClient extends WebSocketClient {
                     observer.onRemoteDescription(data.getJSONObject("sdp"));
                 } else if (data.has("candidate")) {
                     observer.onIceCandidate(data.getJSONObject("candidate"));
+                } else if (data.has("ended")) {
+                    observer.onCallEnd();
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -61,15 +63,10 @@ public class VideoChatWebSocketClient extends WebSocketClient {
     public void onError(Exception ex) {
 
     }
-
-    @Override
-    public void send(String s) {
-        Log.d("VideoChatWebSocketClient", s);
-        super.send(s);
-    }
 }
 
 abstract class VideoChatWebSocketObserver {
     abstract void onRemoteDescription(JSONObject sdp);
     abstract void onIceCandidate(JSONObject candidate);
+    abstract void onCallEnd();
 }
